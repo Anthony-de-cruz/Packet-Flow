@@ -6,17 +6,19 @@ from pathlib import Path
 
 from PIL import Image
 
-SAMPLE_TYPE_DIR_PATHS = [
-    "../../Packet-Classifier/data/test/google-meet",
-    "../../Packet-Classifier/data/test/instagram",
-    "../../Packet-Classifier/data/test/tiktok",
-    "../../Packet-Classifier/data/test/twitter",
-    "../../Packet-Classifier/data/test/youtube",
-]
-DEST_ADDR = "192.168.0.54", 9000
 
+UDP_BIND_INTERFACE = "uesimtun0"
+UDP_DEST_ADDR = "192.168.0.52", 9000
+
+SAMPLE_TYPE_DIR_PATHS = [
+    "../Packet-Classifier/data/test/google-meet",
+    "../Packet-Classifier/data/test/instagram",
+    "../Packet-Classifier/data/test/tiktok",
+    "../Packet-Classifier/data/test/twitter",
+    "../Packet-Classifier/data/test/youtube",
+]
 CHUNK_SIZE = 1200
-DELAY_SECONDS = 0.1
+DELAY_SECONDS = 0.05
 SAMPLE_SIZE = (28, 28)
 
 
@@ -25,13 +27,14 @@ def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
     sample_type_paths = []
     for dir in sample_type_dirs:
         sample_type_paths.append(
-            sorted(
+            [sorted(
                 child
                 for child in Path(dir).iterdir()
                 if child.is_file() and child.suffix == ".png"
-            )[:10]
+            )[:50]]
         )
-
+        
+    print(sample_type_paths)
     # Extract and preprocess each sample.
     sample_bytes = []
     for sample_dir in sample_type_paths:
@@ -44,22 +47,26 @@ def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
 
 def main() -> None:
     sample_set = extract_samples(SAMPLE_TYPE_DIR_PATHS)
+    total_packets = 0
 
     while True:
+        print("Opening socket...")
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            print(
+                "Binding socket to "
+                f"{UDP_BIND_INTERFACE[0]}:{UDP_BIND_INTERFACE[1]} ...")
+            sock.setsockopt(
+                socket.SOL_SOCKET,
+                socket.SO_BINDTODEVICE,
+                UDP_BIND_INTERFACE.encode() + b"\0")
             for samples in sample_set:
                 for sample in samples:
-                    packet_count = 0
-                    for offset in range(0, len(sample), CHUNK_SIZE):
-                        chunk = sample[offset : offset + CHUNK_SIZE]
-                        sock.sendto(chunk, DEST_ADDR)
-                        packet_count += 1
-                        time.sleep(DELAY_SECONDS)
-
+                    sock.sendto(sample, UDP_DEST_ADDR)
+                    total_packets += 1
                     print(
-                        f"sent {sample} as {packet_count} UDP packet(s) "
-                        f"to {DEST_ADDR[0]}:{DEST_ADDR[1]}"
-                    )
+                        f"TX 1 UDP to {UDP_DEST_ADDR[0]}:{UDP_DEST_ADDR[1]}, "
+                        f"total packets={total_packets}")
+                    time.sleep(DELAY_SECONDS)
 
 
 if __name__ == "__main__":
