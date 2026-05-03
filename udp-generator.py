@@ -18,48 +18,46 @@ SAMPLE_TYPE_DIR_PATHS = [
     "../Packet-Classifier/data/test/youtube",
 ]
 CHUNK_SIZE = 1200
-DELAY_SECONDS = 0.05
+DELAY_SECONDS = 0.01
 SAMPLE_SIZE = (28, 28)
 
 
 def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
     # Find all samples.
-    sample_type_paths = []
+    sample_set_paths: list[list[str]] = []
     for dir in sample_type_dirs:
-        sample_type_paths.append(
-            [sorted(
-                child
-                for child in Path(dir).iterdir()
-                if child.is_file() and child.suffix == ".png"
-            )[:50]]
-        )
-        
-    print(sample_type_paths)
-    # Extract and preprocess each sample.
-    sample_bytes = []
-    for sample_dir in sample_type_paths:
+        sample_set_paths.append(sorted(
+            str(child) for child in Path(dir).iterdir()
+            if child.is_file() and child.suffix == ".png"
+        )[:50])
+
+        # Extract and preprocess each sample.
+    sample_bytes: list[list[bytes]] = []
+    for sample_dir in sample_set_paths:
+        sample_type_bytes: list[bytes] = []
+
         for sample_path in sample_dir:
             with Image.open(sample_path) as image:
-                sample_bytes.append(image.convert("L").resize(SAMPLE_SIZE).tobytes())
+                sample_type_bytes.append(
+                    image.convert("L").resize(SAMPLE_SIZE).tobytes()
+                )
+        sample_bytes.append(sample_type_bytes)
 
     return sample_bytes
-
 
 def main() -> None:
     sample_set = extract_samples(SAMPLE_TYPE_DIR_PATHS)
     total_packets = 0
 
     while True:
-        print("Opening socket...")
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            print(
-                "Binding socket to "
-                f"{UDP_BIND_INTERFACE[0]}:{UDP_BIND_INTERFACE[1]} ...")
-            sock.setsockopt(
-                socket.SOL_SOCKET,
-                socket.SO_BINDTODEVICE,
-                UDP_BIND_INTERFACE.encode() + b"\0")
-            for samples in sample_set:
+        for samples in sample_set:
+            print("Opening socket...")
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                print(f"Binding socket to {UDP_BIND_INTERFACE}...")
+                sock.setsockopt(
+                    socket.SOL_SOCKET,
+                    socket.SO_BINDTODEVICE,
+                    UDP_BIND_INTERFACE.encode() + b"\0")
                 for sample in samples:
                     sock.sendto(sample, UDP_DEST_ADDR)
                     total_packets += 1
