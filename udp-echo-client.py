@@ -16,13 +16,15 @@ def main() -> None:
 
         while True:
             data, address = sock.recvfrom(2048)
+            sock.sendto(data, address)
 
             packet_count += 1
             byte_count += len(data)
             print(
                 f"rx packet {packet_count} from {address[0]}:{address[1]} "
-                f"({len(data)} bytes, total {byte_count})"
+                f"({len(data)} bytes, total {byte_count}), echoed"
             )
+
 
 if __name__ == "__main__":
     try:
