@@ -33,7 +33,7 @@ def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
             if child.is_file() and child.suffix == ".png"
         )[:50])
 
-        # Extract and preprocess each sample.
+    # Extract and preprocess each sample.
     sample_bytes: list[list[bytes]] = []
     for sample_dir in sample_set_paths:
         sample_type_bytes: list[bytes] = []
@@ -51,7 +51,6 @@ def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
 def main() -> None:
     sample_set = extract_samples(SAMPLE_TYPE_DIR_PATHS)
     total_packets = 0
-    total_echoes = 0
     total_timeouts = 0
     total_mismatches = 0
 
@@ -76,18 +75,17 @@ def main() -> None:
                         print(
                             f"TX UDP to {UDP_DEST_ADDR[0]}:{UDP_DEST_ADDR[1]}, "
                             f"echo timeout after {ECHO_TIMEOUT_SECONDS:.1f}s, "
-                            f"sent={total_packets}, echoes={total_echoes}, "
+                            f"sent={total_packets}, "
                             f"timeouts={total_timeouts}, "
                             f"mismatches={total_mismatches}"
                         )
                     else:
                         round_trip_ms = (time.perf_counter() - start_time) * 1000
                         if echo == sample:
-                            total_echoes += 1
                             print(
                                 f"TX/RX UDP via {address[0]}:{address[1]}, "
                                 f"round_trip={round_trip_ms:.2f}ms, "
-                                f"sent={total_packets}, echoes={total_echoes}, "
+                                f"sent={total_packets}, "
                                 f"timeouts={total_timeouts}, "
                                 f"mismatches={total_mismatches}"
                             )
@@ -97,7 +95,7 @@ def main() -> None:
                                 f"TX UDP to {UDP_DEST_ADDR[0]}:{UDP_DEST_ADDR[1]}, "
                                 f"echo mismatch from {address[0]}:{address[1]} "
                                 f"after {round_trip_ms:.2f}ms, "
-                                f"sent={total_packets}, echoes={total_echoes}, "
+                                f"sent={total_packets}, "
                                 f"timeouts={total_timeouts}, "
                                 f"mismatches={total_mismatches}"
                             )

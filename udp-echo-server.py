@@ -9,21 +9,18 @@ UDP_LISTEN_ADDR = "0.0.0.0", 9000
 def main() -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.bind(UDP_LISTEN_ADDR)
-        print(f"Listening: {UDP_LISTEN_ADDR[0]}:{UDP_LISTEN_ADDR[1]}")
+        print(f"Listening: {UDP_LISTEN_ADDR[0]}:{UDP_LISTEN_ADDR[1]}...")
 
         packet_count = 0
-        byte_count = 0
 
         while True:
             data, address = sock.recvfrom(2048)
-            sock.sendto(data, address)
-
-            packet_count += 1
-            byte_count += len(data)
             print(
-                f"rx packet {packet_count} from {address[0]}:{address[1]} "
-                f"({len(data)} bytes, total {byte_count}), echoed"
+                f"RX/TX UDP via {address[0]}:{address[1]}, "
+                f"echoes={packet_count}"
             )
+            sock.sendto(data, address)
+            packet_count += 1
 
 
 if __name__ == "__main__":
