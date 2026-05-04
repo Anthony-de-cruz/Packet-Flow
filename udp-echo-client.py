@@ -7,9 +7,9 @@ from pathlib import Path
 from PIL import Image
 
 
-#UDP_BIND_INTERFACE = "uesimtun0"
-#UDP_DEST_ADDR = "192.168.0.52", 9000
-UDP_DEST_ADDR = "127.0.0.1", 9000
+UDP_BIND_INTERFACE = "uesimtun0"
+UDP_DEST_ADDR = "192.168.0.52", 9000
+#UDP_DEST_ADDR = "127.0.0.1", 9000
 
 SAMPLE_TYPE_DIR_PATHS = [
     "../Packet-Classifier/data/test/google-meet",
@@ -58,11 +58,11 @@ def main() -> None:
         for samples in sample_set:
             print("Opening socket...")
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                # print(f"Binding socket to {UDP_BIND_INTERFACE}...")
-                # sock.setsockopt(
-                #     socket.SOL_SOCKET,
-                #     socket.SO_BINDTODEVICE,
-                #     UDP_BIND_INTERFACE.encode() + b"\0")
+                print(f"Binding socket to {UDP_BIND_INTERFACE}...")
+                sock.setsockopt(
+                    socket.SOL_SOCKET,
+                    socket.SO_BINDTODEVICE,
+                    UDP_BIND_INTERFACE.encode() + b"\0")
                 sock.settimeout(ECHO_TIMEOUT_SECONDS)
                 for sample in samples:
                     start_time = time.perf_counter()
