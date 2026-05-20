@@ -106,10 +106,8 @@ def main() -> None:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.bind(UDP_LISTEN_ADDR)
-            print(
-                f"Listening: {UDP_LISTEN_ADDR[0]}:{UDP_LISTEN_ADDR[1]}, "
-                f"logging to {LOG_PATH}..."
-            )
+            print(f"Listening: {UDP_LISTEN_ADDR[0]}:{UDP_LISTEN_ADDR[1]}")
+            print(f"Logging to {LOG_PATH}...")
 
             source_stats: dict[str, SourceStats] = defaultdict(SourceStats)
             last_log = time.monotonic()
@@ -127,8 +125,10 @@ def main() -> None:
                 stats.byte_interval += packet_size
                 stats.last_source_port = source_port
 
-                now = time.monotonic()
+                print(f"RX/TX UDP #{stats.packet_total} via {source_ip}:{source_port}")
+
                 # Log on interval.
+                now = time.monotonic()
                 if now - last_log >= LOG_INTERVAL_SECONDS:
                     interval_secs = now - last_log
                     log_source_rates(log_writer, source_stats, interval_secs)
