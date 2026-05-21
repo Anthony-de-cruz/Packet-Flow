@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import csv
 import socket
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 
 from PIL import Image
+
+from utils import open_csv_writer, utc_timestamp
 
 
 UDP_BIND_INTERFACE = "uesimtun0"
@@ -39,24 +39,8 @@ LOG_COLUMNS = [
 ]
 
 
-def timestamp() -> tuple[str, int]:
-    now = datetime.now(UTC)
-    return now.isoformat(timespec="milliseconds").replace("+00:00", "Z"), int(
-        now.timestamp() * 1000
-    )
-
-
-def open_log() -> tuple[object, csv.DictWriter]:
-    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    file = LOG_PATH.open("a", newline="")
-    writer = csv.DictWriter(file, fieldnames=LOG_COLUMNS)
-    if LOG_PATH.stat().st_size == 0:
-        writer.writeheader()
-    return file, writer
-
-
 def write_log(
-    writer: csv.DictWriter,
+    writer,
     packet_number: int,
     status: str,
     latency_ms: float | None,
@@ -64,7 +48,7 @@ def write_log(
     total_timeouts: int,
     total_mismatches: int,
 ) -> None:
-    time_text, time_ms = timestamp()
+    time_text, time_ms = utc_timestamp()
     writer.writerow(
         {
             "timestamp_utc": time_text,
@@ -106,14 +90,13 @@ def extract_samples(sample_type_dirs: list[str]) -> list[list[bytes]]:
 
     return sample_bytes
 
-
 def main() -> None:
     sample_set = extract_samples(SAMPLE_TYPE_DIR_PATHS)
     total_packets = 0
     total_timeouts = 0
     total_mismatches = 0
 
-    log_file, log_writer = open_log()
+    log_file, log_writer = open_csv_writer(LOG_PATH, LOG_COLUMNS)
     try:
         while True:
             for samples in sample_set:

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import csv
 import os
-from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 
@@ -11,15 +9,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from utils import OUT_DIR, load_csv
 
-ROOT = Path(__file__).resolve().parent.parent
-INPUT_CSV = ROOT / "out/processed-timeseries.csv"
-OUT_DIR = ROOT / "out"
-
-
-def load_rows():
-    with INPUT_CSV.open(newline="") as file:
-        return list(csv.DictReader(file))
+INPUT_CSV = OUT_DIR / "processed-timeseries.csv"
 
 
 def title(column):
@@ -62,7 +54,7 @@ def classification_totals(rows):
 
 
 def main():
-    rows = load_rows()
+    rows = load_csv(INPUT_CSV)
 
     line_chart(
         rows, "flow_count", "flow-count.png", "Flow Count Over Time", "Active Flows"

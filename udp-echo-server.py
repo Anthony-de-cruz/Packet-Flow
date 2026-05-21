@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
-import csv
 import socket
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import TextIO
+
+from utils import UDP_LISTEN_ADDR, open_csv_writer, utc_timestamp
 
 
-UDP_LISTEN_ADDR = "0.0.0.0", 9000
 RECV_SIZE = 2048
 LOG_INTERVAL_SECONDS = 1.0
 LOG_PATH = Path("out/udp-echo-server.csv")
@@ -44,27 +42,8 @@ class SourceStats:
     last_source_port: int = 0
 
 
-def utc_timestamp() -> tuple[str, int]:
-    now = datetime.now(UTC)
-    return now.isoformat(timespec="milliseconds").replace("+00:00", "Z"), int(
-        now.timestamp() * 1000
-    )
-
-
-def open_csv_writer(path: Path) -> tuple[TextIO, csv.DictWriter]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    file = path.open("a", newline="")
-    writer = csv.DictWriter(file, fieldnames=CSV_COLUMNS)
-
-    if path.stat().st_size == 0:
-        writer.writeheader()
-        file.flush()
-
-    return file, writer
-
-
 def log_source_rates(
-    writer: csv.DictWriter,
+    writer,
     source_stats: dict[str, SourceStats],
     interval_secs: float,
 ) -> None:
@@ -102,7 +81,7 @@ def log_source_rates(
 
 
 def main() -> None:
-    log_file, log_writer = open_csv_writer(LOG_PATH)
+    log_file, log_writer = open_csv_writer(LOG_PATH, CSV_COLUMNS)
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.bind(UDP_LISTEN_ADDR)

@@ -3,14 +3,13 @@
 import csv
 from collections import defaultdict
 from datetime import UTC, datetime
-from pathlib import Path
 
+from utils import OUT_DIR, load_csv
 
-ROOT = Path(__file__).resolve().parent.parent
-INGRESS_CSV = ROOT / "out/ingress.csv"
-CLASSIFY_CSV = ROOT / "out/classify.csv"
-ECHO_SERVER_CSV = ROOT / "out/rpi-2-udp-echo-server.csv"
-OUTPUT_CSV = ROOT / "out/processed-timeseries.csv"
+INGRESS_CSV = OUT_DIR / "ingress.csv"
+CLASSIFY_CSV = OUT_DIR / "classify.csv"
+ECHO_SERVER_CSV = OUT_DIR / "rpi-2-udp-echo-server.csv"
+OUTPUT_CSV = OUT_DIR / "processed-timeseries.csv"
 
 SOURCE_LABELS = {
     "192.168.0.50": "node_1",
@@ -28,11 +27,6 @@ INGRESS_COLUMNS = [
     "unoptimised_mbps",
     "unoptimised_percent",
 ]
-
-
-def load_csv(path):
-    with path.open(newline="") as file:
-        return list(csv.DictReader(file))
 
 
 def number(value):
